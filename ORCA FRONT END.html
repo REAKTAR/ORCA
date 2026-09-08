@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ORCA — Talk to the Ocean</title>
+<style>
+  :root{
+    --bg-deep:#0B2E44;
+    --bg-deep-2:#0E3A56;
+    --teal:#1C8FA0;
+    --teal-light:#4FB8C7;
+    --foam:#EAF6F6;
+    --ink:#0F2431;
+    --ink-soft:#4B6472;
+    --coral:#FF7A59;
+    --white:#FFFFFF;
+    --line: rgba(255,255,255,0.14);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Arial,sans-serif;
+    background:radial-gradient(120% 140% at 15% 0%, var(--bg-deep-2) 0%, var(--bg-deep) 55%, #081F2F 100%);
+    color:var(--white);
+    display:flex;
+    justify-content:center;
+    min-height:100%;
+  }
+  .app{
+    width:100%;
+    max-width:520px;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    padding:18px 16px 22px;
+  }
+
+  /* ---- top bar ---- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .wordmark{
+    font-family:Georgia,Cambria,"Times New Roman",serif;
+    font-size:22px;
+    font-weight:700;
+    letter-spacing:0.3px;
+  }
+  .wordmark small{
+    display:block;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    font-size:10.5px;
+    font-weight:500;
+    color:var(--teal-light);
+    letter-spacing:0.2px;
+  }
+  .langrow{
+    display:flex;
+    gap:6px;
+  }
+  .pill{
+    appearance:none;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,0.06);
+    color:var(--white);
+    font-size:13px;
+    padding:6px 10px;
+    border-radius:999px;
+    cursor:pointer;
+  }
+  .pill[aria-pressed="true"]{
+    background:var(--teal);
+    border-color:var(--teal);
+    font-weight:600;
+  }
+  .pill:focus-visible{ outline:2px solid var(--teal-light); outline-offset:2px; }
+
+  /* ---- persona row ---- */
+  .personarow{
+    display:flex;
+    gap:8px;
+    margin:6px 0 14px;
+  }
+  .persona-btn{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:3px;
+    padding:8px 4px 7px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,0.05);
+    color:var(--white);
+    cursor:pointer;
+    font-size:11px;
+    line-height:1.15;
+  }
+  .persona-btn .emoji{ font-size:18px; }
+  .persona-btn[aria-pressed="true"]{
+    background:rgba(79,184,199,0.22);
+    border-color:var(--teal-light);
+  }
+  .persona-btn:focus-visible{ outline:2px solid var(--teal-light); outline-offset:2px; }
+
+  /* ---- notice ---- */
+  .notice{
+    font-size:11.5px;
+    color:var(--teal-light);
+    background:rgba(28,143,160,0.14);
+    border:1px solid rgba(79,184,199,0.3);
+    border-radius:10px;
+    padding:8px 10px;
+    margin-bottom:12px;
+  }
+
+  /* ---- transcript ---- */
+  .stage{
+    flex:1;
+    background:var(--foam);
+    border-radius:20px;
+    padding:16px 14px;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    min-height:260px;
+  }
+  .transcript{
+    flex:1;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding-right:2px;
+  }
+  .bubble{
+    max-width:86%;
+    padding:10px 13px;
+    border-radius:14px;
+    font-size:14.5px;
+    line-height:1.45;
+    color:var(--ink);
+  }
+  .bubble.user{
+    align-self:flex-end;
+    background:var(--teal);
+    color:#fff;
+    border-bottom-right-radius:4px;
+  }
+  .bubble.agent{
+    align-self:flex-start;
+    background:#fff;
+    border:1px solid #D8E9EC;
+    border-bottom-left-radius:4px;
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+  }
+  .bubble.agent .replay{
+    flex:none;
+    width:26px;height:26px;
+    border-radius:50%;
+    border:none;
+    background:var(--foam);
+    color:var(--teal);
+    cursor:pointer;
+    font-size:13px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .bubble.agent .replay:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
+  .empty-hint{
+    margin:auto;
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:13.5px;
+    max-width:280px;
+  }
+
+  /* ---- chips ---- */
+  .chips{
+    display:flex;
+    gap:8px;
+    margin-top:12px;
+    flex-wrap:wrap;
+  }
+  .chip{
+    border:1px solid #CFE4E8;
+    background:#fff;
+    color:var(--teal);
+    font-size:12.5px;
+    padding:7px 12px;
+    border-radius:999px;
+    cursor:pointer;
+  }
+  .chip:hover{ background:var(--foam); }
+  .chip:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
+
+  /* ---- mic control ---- */
+  .control{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    padding-top:20px;
+  }
+  .mic-wrap{ position:relative; width:88px; height:88px; }
+  .mic-ring{
+    position:absolute; inset:0;
+    border-radius:50%;
+    background:var(--coral);
+    opacity:0;
+    transform:scale(1);
+  }
+  .listening .mic-ring{
+    opacity:0.35;
+    animation:pulse 1.4s ease-out infinite;
+  }
+  @keyframes pulse{
+    0%{ transform:scale(0.85); opacity:0.45; }
+    100%{ transform:scale(1.55); opacity:0; }
+  }
+  .mic-btn{
+    position:absolute; inset:0;
+    border-radius:50%;
+    border:none;
+    background:var(--teal);
+    color:#fff;
+    font-size:30px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 18px rgba(0,0,0,0.28);
+  }
+  .listening .mic-btn{ background:var(--coral); }
+  .thinking .mic-btn{ background:var(--teal-light); }
+  .speaking .mic-btn{ background:#2FB0A6; }
+  .mic-btn:focus-visible{ outline:3px solid var(--teal-light); outline-offset:3px; }
+  .mic-btn[disabled]{ opacity:0.45; cursor:not-allowed; }
+
+  .status{ font-size:13.5px; color:var(--teal-light); min-height:18px; }
+  .type-toggle{
+    background:none;border:none;
+    color:rgba(255,255,255,0.65);
+    font-size:12.5px;
+    text-decoration:underline;
+    cursor:pointer;
+    margin-top:2px;
+  }
+  .type-toggle:focus-visible{ outline:2px solid var(--teal-light); }
+
+  .typebar{
+    display:none;
+    gap:8px;
+    margin-top:12px;
+  }
+  .typebar.open{ display:flex; }
+  .typebar input{
+    flex:1;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,0.08);
+    color:#fff;
+    padding:10px 12px;
+    font-size:14px;
+  }
+  .typebar input::placeholder{ color:rgba(255,255,255,0.5); }
+  .typebar button{
+    border:none;
+    background:var(--teal);
+    color:#fff;
+    border-radius:12px;
+    padding:0 16px;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .typebar button:focus-visible{ outline:2px solid var(--teal-light); }
+
+  @media (prefers-reduced-motion: reduce){
+    .listening .mic-ring{ animation:none; opacity:0.3; }
+  }
+  @media (max-width:380px){
+    .wordmark{ font-size:19px; }
+    .pill{ padding:5px 8px; font-size:12px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="wordmark">ORCA<small>Marine assistant</small></div>
+    <div class="langrow" id="langRow" role="group" aria-label="Choose language"></div>
+  </div>
+
+  <div class="personarow" id="personaRow" role="group" aria-label="Choose who you are"></div>
+
+  <div class="notice" id="notice"></div>
+
+  <div class="stage">
+    <div class="transcript" id="transcript">
+      <div class="empty-hint" id="emptyHint">Tap the mic, or a suggestion below, to start talking to ORCA.</div>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="control" id="control">
+    <div class="mic-wrap" id="micWrap">
+      <div class="mic-ring"></div>
+      <button class="mic-btn" id="micBtn" aria-label="Tap to speak">🎙️</button>
+    </div>
+    <div class="status" id="status"></div>
+    <button class="type-toggle" id="typeToggle"></button>
+  </div>
+
+  <div class="typebar" id="typebar">
+    <input id="typeInput" type="text" />
+    <button id="typeSend"></button>
+  </div>
+
+</div>
+
+<script>
+(function(){
+
+  var LANGS = [
+    { code:"en", locale:"en-IN", label:"English" },
+    { code:"hi", locale:"hi-IN", label:"हिंदी" },
+    { code:"ta", locale:"ta-IN", label:"தமிழ்" },
+    { code:"bn", locale:"bn-IN", label:"বাংলা" }
+  ];
+
+  var PERSONAS = [
+    { id:"fisherman",  emoji:"🎣", label:{ en:"Fisherman",  hi:"मछुआरा",   ta:"மீனவர்",              bn:"জেলে" } },
+    { id:"researcher", emoji:"🔬", label:{ en:"Researcher", hi:"शोधकर्ता", ta:"ஆராய்ச்சியாளர்",      bn:"গবেষক" } },
+    { id:"disaster",   emoji:"⚠️", label:{ en:"Disaster",   hi:"आपदा",     ta:"பேரிடர்",             bn:"দুর্যোগ" } },
+    { id:"maritime",   emoji:"⚓", label:{ en:"Maritime",   hi:"नौवहन",    ta:"கடல்போக்குவரத்து",     bn:"নৌ-চালনা" } }
+  ];
+
+  var STRINGS = {
+    en:{ tap:"Tap to speak", listening:"Listening…", thinking:"Thinking…", speaking:"Speaking…",
+         type:"Type instead", send:"Send", placeholder:"Type your question…",
+         notice:"Demo mode — sample ocean data shown below. Connects to live MOSDAC / INCOIS feeds in production.",
+         noMic:"Voice input isn't supported in this browser. Try Chrome. You can still type below.",
+         hint:"Tap the mic, or a suggestion below, to start talking to ORCA." },
+    hi:{ tap:"बोलने के लिए दबाएँ", listening:"सुन रहा हूँ…", thinking:"सोच रहा हूँ…", speaking:"बोल रहा हूँ…",
+         type:"टाइप करें", send:"भेजें", placeholder:"अपना सवाल लिखें…",
+         notice:"डेमो मोड — यह नमूना डेटा है। असल उत्पाद में यह MOSDAC / INCOIS से लाइव डेटा लेगा।",
+         noMic:"इस ब्राउज़र में आवाज़ इनपुट उपलब्ध नहीं है। Chrome आज़माएँ। नीचे टाइप कर सकते हैं।",
+         hint:"ORCA से बात शुरू करने के लिए माइक दबाएँ, या नीचे दिए सुझाव चुनें।" },
+    ta:{ tap:"பேச தட்டவும்", listening:"கேட்கிறேன்…", thinking:"யோசிக்கிறேன்…", speaking:"பேசுகிறேன்…",
+         type:"தட்டச்சு செய்யவும்", send:"அனுப்பு", placeholder:"உங்கள் கேள்வியை தட்டச்சு செய்யவும்…",
+         notice:"டெமோ முறை — இது மாதிரி தரவு. நிஜ தயாரிப்பில் இது MOSDAC / INCOIS-இலிருந்து நேரடி தரவைப் பெறும்.",
+         noMic:"இந்த உலாவியில் குரல் உள்ளீடு கிடைக்கவில்லை. Chrome முயற்சிக்கவும். கீழே தட்டச்சு செய்யலாம்.",
+         hint:"ORCA-வுடன் பேச மைக்கைத் தட்டவும், அல்லது கீழே உள்ள பரிந்துரையைத் தேர்ந்தெடுக்கவும்." },
+    bn:{ tap:"কথা বলতে চাপুন", listening:"শুনছি…", thinking:"ভাবছি…", speaking:"বলছি…",
+         type:"টাইপ করুন", send:"পাঠান", placeholder:"আপনার প্রশ্ন লিখুন…",
+         notice:"ডেমো মোড — এটি নমুনা তথ্য। আসল সংস্করণে এটি MOSDAC / INCOIS থেকে লাইভ তথ্য নেবে।",
+         noMic:"এই ব্রাউজারে ভয়েস ইনপুট উপলব্ধ নয়। Chrome ব্যবহার করুন। নিচে টাইপ করতে পারেন।",
+         hint:"ORCA-র সাথে কথা বলতে মাইক চাপুন, অথবা নিচের পরামর্শ থেকে বেছে নিন।" }
+  };
+
+  var TEMPLATES = {
+    en:{
+      fishing:"Good fishing conditions southwest of Kochi, about 12 nautical miles out. Sea surface temperature is 28.4°C with a strong chlorophyll signal — a promising zone for the next 24 hours.",
+      weather:"No cyclone alert right now for the Kerala coast. Wave height is moderate, around 1.2 metres. Light to moderate winds expected through tomorrow.",
+      ocean:"Current sea surface temperature near your coast is 28.4°C, slightly above the weekly average. Chlorophyll levels are moderate to high.",
+      help:"I'm ORCA. Ask me about fishing zones, weather and sea conditions, or ocean temperature — by voice or by typing."
+    },
+    hi:{
+      fishing:"कोच्चि से दक्षिण-पश्चिम में, करीब 12 समुद्री मील दूर, मछली पकड़ने की अच्छी स्थिति है। समुद्र का तापमान 28.4°C है और क्लोरोफिल स्तर अच्छा है — अगले 24 घंटों के लिए अनुकूल क्षेत्र।",
+      weather:"अभी केरल तट के लिए कोई चक्रवात चेतावनी नहीं है। लहरों की ऊँचाई सामान्य है, करीब 1.2 मीटर। कल तक हल्की से मध्यम हवाएँ रहेंगी।",
+      ocean:"आपके तट के पास समुद्र का तापमान अभी 28.4°C है, जो साप्ताहिक औसत से थोड़ा अधिक है। क्लोरोफिल स्तर मध्यम से उच्च है।",
+      help:"मैं ORCA हूँ। मुझसे मछली पकड़ने के क्षेत्र, मौसम, समुद्री हालात या तापमान के बारे में पूछें — बोलकर या लिखकर।"
+    },
+    ta:{
+      fishing:"கொச்சிக்கு தென்மேற்கே, சுமார் 12 கடல் மைல் தொலைவில், மீன்பிடிக்க நல்ல சூழ்நிலை உள்ளது. கடல் மேற்பரப்பு வெப்பநிலை 28.4°C, குளோரோஃபில் அளவும் நன்றாக உள்ளது — அடுத்த 24 மணி நேரத்திற்கு ஏற்ற பகுதி.",
+      weather:"இப்போது கேரள கடற்கரைக்கு புயல் எச்சரிக்கை இல்லை. அலைகளின் உயரம் சராசரியாக 1.2 மீட்டர். நாளை வரை லேசான முதல் மிதமான காற்று எதிர்பார்க்கப்படுகிறது.",
+      ocean:"உங்கள் கடற்கரைக்கு அருகில் தற்போதைய கடல் வெப்பநிலை 28.4°C, வார சராசரியை விட சற்று அதிகம். குளோரோஃபில் அளவு நடுத்தரத்திலிருந்து அதிகமாக உள்ளது.",
+      help:"நான் ORCA. மீன்பிடி பகுதிகள், வானிலை, கடல் நிலை அல்லது வெப்பநிலை பற்றி என்னிடம் கேளுங்கள் — பேசியோ அல்லது தட்டச்சு செய்தோ."
+    },
+    bn:{
+      fishing:"কোচি থেকে দক্ষিণ-পশ্চিমে, প্রায় ১২ নটিক্যাল মাইল দূরে, মাছ ধরার জন্য ভালো পরিস্থিতি রয়েছে। সমুদ্রের তাপমাত্রা ২৮.৪°C এবং ক্লোরোফিলের মাত্রা ভালো — আগামী ২৪ ঘণ্টার জন্য উপযুক্ত এলাকা।",
+      weather:"এই মুহূর্তে কেরালা উপকূলের জন্য কোনো ঘূর্ণিঝড় সতর্কতা নেই। ঢেউয়ের উচ্চতা স্বাভাবিক, প্রায় ১.২ মিটার। আগামীকাল পর্যন্ত হালকা থেকে মাঝারি বাতাস থাকবে।",
+      ocean:"আপনার উপকূলের কাছে বর্তমান সমুদ্র তাপমাত্রা ২৮.৪°C, সাপ্তাহিক গড়ের চেয়ে সামান্য বেশি। ক্লোরোফিলের মাত্রা মাঝারি থেকে উচ্চ।",
+      help:"আমি ORCA। মাছ ধরার এলাকা, আবহাওয়া, সমুদ্রের অবস্থা বা তাপমাত্রা সম্পর্কে আমাকে জিজ্ঞাসা করুন — কথা বলে বা লিখে।"
+    }
+  };
+
+  var NOTES = {
+    en:{ fisherman:"Tip: head straight for this zone — it saves both time and fuel.",
+         researcher:"Full profile: SST, chlorophyll-a and wind data available for export.",
+         disaster:"No hazard escalation detected at this time — conditions stable.",
+         maritime:"Recommended for coastal transit; no restrictions currently in effect." },
+    hi:{ fisherman:"सुझाव: सीधे इस क्षेत्र की ओर जाएँ — समय और ईंधन दोनों बचेंगे।",
+         researcher:"पूरा डेटा: तापमान, क्लोरोफिल और हवा का विवरण एक्सपोर्ट के लिए उपलब्ध है।",
+         disaster:"फिलहाल किसी खतरे में बढ़ोतरी नहीं — स्थिति स्थिर है।",
+         maritime:"तटीय आवागमन के लिए उपयुक्त; फिलहाल कोई प्रतिबंध नहीं।" },
+    ta:{ fisherman:"குறிப்பு: நேரடியாக இந்த பகுதிக்குச் செல்லுங்கள் — நேரமும் எரிபொருளும் மிச்சமாகும்.",
+         researcher:"முழு தரவு: வெப்பநிலை, குளோரோஃபில் மற்றும் காற்று விவரங்கள் ஏற்றுமதிக்கு கிடைக்கின்றன.",
+         disaster:"தற்போது ஆபத்து அதிகரிப்பு எதுவும் இல்லை — நிலைமை நிலையானது.",
+         maritime:"கடலோர பயணத்திற்கு ஏற்றது; தற்போது எந்த கட்டுப்பாடும் இல்லை." },
+    bn:{ fisherman:"পরামর্শ: সরাসরি এই এলাকায় যান — সময় ও জ্বালানি দুটোই বাঁচবে।",
+         researcher:"সম্পূর্ণ তথ্য: তাপমাত্রা, ক্লোরোফিল ও বাতাসের বিবরণ এক্সপোর্টের জন্য উপলব্ধ।",
+         disaster:"এই মুহূর্তে কোনো ঝুঁকি বৃদ্ধি সনাক্ত হয়নি — পরিস্থিতি স্থিতিশীল।",
+         maritime:"উপকূলীয় চলাচলের জন্য উপযুক্ত; বর্তমানে কোনো বিধিনিষেধ নেই।" }
+  };
+
+  var CHIPS = {
+    en:{ fisherman:["Where should I fish today?","Any storm warning?"],
+         researcher:["Today's sea temperature?","Show chlorophyll levels"],
+         disaster:["Any cyclone alert?","Current wave height?"],
+         maritime:["Is the route safe today?","Current wind conditions?"] },
+    hi:{ fisherman:["आज कहाँ मछली मिलेगी?","कोई तूफान चेतावनी है?"],
+         researcher:["आज समुद्र का तापमान?","क्लोरोफिल स्तर बताओ"],
+         disaster:["कोई चक्रवात चेतावनी?","लहरों की ऊँचाई कितनी?"],
+         maritime:["आज रास्ता सुरक्षित है?","हवा की स्थिति क्या है?"] },
+    ta:{ fisherman:["இன்று எங்கு மீன் பிடிக்கலாம்?","புயல் எச்சரிக்கை உள்ளதா?"],
+         researcher:["இன்றைய கடல் வெப்பநிலை?","குளோரோஃபில் அளவு காட்டு"],
+         disaster:["புயல் எச்சரிக்கை உள்ளதா?","அலை உயரம் எவ்வளவு?"],
+         maritime:["இன்று பாதை பாதுகாப்பானதா?","காற்றின் நிலை என்ன?"] },
+    bn:{ fisherman:["আজ কোথায় মাছ পাওয়া যাবে?","কোনো ঝড়ের সতর্কতা আছে?"],
+         researcher:["আজকের সমুদ্র তাপমাত্রা?","ক্লোরোফিল মাত্রা দেখাও"],
+         disaster:["ঘূর্ণিঝড়ের সতর্কতা আছে?","ঢেউয়ের উচ্চতা কত?"],
+         maritime:["আজ পথ নিরাপদ?","বাতাসের অবস্থা কী?"] }
+  };
+
+  var KEYWORDS = {
+    fishing:["fish","fishing","catch","pfz","zone","मछली","मछुआ","மீன்","மீன்பிடி","মাছ"],
+    weather:["weather","storm","cyclone","wave","wind","alert","warning",
+             "मौसम","तूफान","चक्रवात","लहर","चेतावनी",
+             "வானிலை","புயல்","அலை","எச்சரிக்கை",
+             "আবহাওয়া","ঝড়","তুফান","সতর্কতা"],
+    ocean:["temperature","sst","chlorophyll","ocean","sea","water",
+           "तापमान","समुद्र","पानी","क्लोरोफिल",
+           "வெப்பநிலை","கடல்","குளோரோஃபில்",
+           "তাপমাত্রা","সমুদ্র","ক্লোরোফিল"]
+  };
+
+  // ---- state ----
+  var state = { lang:"en", persona:"fisherman", mode:"idle" };
+
+  var SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var recognition = null;
+  if (SpeechRecognitionCtor) {
+    recognition = new SpeechRecognitionCtor();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+  }
+  var synthSupported = "speechSynthesis" in window;
+
+  // ---- DOM refs ----
+  var langRow = document.getElementById("langRow");
+  var personaRow = document.getElementById("personaRow");
+  var noticeEl = document.getElementById("notice");
+  var transcriptEl = document.getElementById("transcript");
+  var emptyHint = document.getElementById("emptyHint");
+  var chipsEl = document.getElementById("chips");
+  var micWrap = document.getElementById("micWrap");
+  var micBtn = document.getElementById("micBtn");
+  var statusEl = document.getElementById("status");
+  var typeToggle = document.getElementById("typeToggle");
+  var typebar = document.getElementById("typebar");
+  var typeInput = document.getElementById("typeInput");
+  var typeSend = document.getElementById("typeSend");
+
+  function t(){ return STRINGS[state.lang]; }
+
+  function classifyIntent(text){
+    var low = text.toLowerCase();
+    var keys = Object.keys(KEYWORDS);
+    for (var i=0;i<keys.length;i++){
+      var words = KEYWORDS[keys[i]];
+      for (var j=0;j<words.length;j++){
+        if (low.indexOf(words[j].toLowerCase()) !== -1) return keys[i];
+      }
+    }
+    return "help";
+  }
+
+  function pickVoice(locale){
+    if (!synthSupported) return null;
+    var voices = speechSynthesis.getVoices();
+    var short = locale.split("-")[0];
+    var exact = voices.filter(function(v){ return v.lang === locale; });
+    if (exact.length) return exact[0];
+    var partial = voices.filter(function(v){ return v.lang && v.lang.indexOf(short) === 0; });
+    if (partial.length) return partial[0];
+    return null;
+  }
+
+  function speak(text){
+    if (!synthSupported) { setMode("idle"); return; }
+    var locale = LANGS.filter(function(l){ return l.code === state.lang; })[0].locale;
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = locale;
+    var v = pickVoice(locale);
+    if (v) utter.voice = v;
+    utter.onstart = function(){ setMode("speaking"); };
+    utter.onend = function(){ setMode("idle"); };
+    utter.onerror = function(){ setMode("idle"); };
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utter);
+  }
+
+  function setMode(mode){
+    state.mode = mode;
+    micWrap.classList.remove("listening","thinking","speaking");
+    if (mode !== "idle") micWrap.classList.add(mode);
+    var labels = { idle:t().tap, listening:t().listening, thinking:t().thinking, speaking:t().speaking };
+    statusEl.textContent = labels[mode] || "";
+    micBtn.setAttribute("aria-label", labels[mode] || t().tap);
+  }
+
+  function addBubble(role, text, speakable){
+    if (emptyHint) { emptyHint.remove(); emptyHint = null; }
+    var div = document.createElement("div");
+    div.className = "bubble " + role;
+    if (role === "agent"){
+      var span = document.createElement("span");
+      span.textContent = text;
+      div.appendChild(span);
+      if (synthSupported){
+        var btn = document.createElement("button");
+        btn.className = "replay";
+        btn.type = "button";
+        btn.textContent = "🔊";
+        btn.setAttribute("aria-label","Replay");
+        btn.addEventListener("click", function(){ speak(speakable); });
+        div.appendChild(btn);
+      }
+    } else {
+      div.textContent = text;
+    }
+    transcriptEl.appendChild(div);
+    transcriptEl.scrollTop = transcriptEl.scrollHeight;
+  }
+
+  function handleQuery(text){
+    if (!text || !text.trim()) return;
+    addBubble("user", text);
+    setMode("thinking");
+    window.setTimeout(function(){
+      var intent = classifyIntent(text);
+      var main = TEMPLATES[state.lang][intent];
+      var note = intent === "help" ? "" : (" " + NOTES[state.lang][state.persona]);
+      var full = main + note;
+      addBubble("agent", full, full);
+      speak(full);
+    }, 450);
+  }
+
+  // ---- render language pills ----
+  function renderLangs(){
+    langRow.innerHTML = "";
+    LANGS.forEach(function(l){
+      var btn = document.createElement("button");
+      btn.className = "pill";
+      btn.type = "button";
+      btn.textContent = l.label;
+      btn.setAttribute("aria-pressed", l.code === state.lang ? "true":"false");
+      btn.addEventListener("click", function(){
+        state.lang = l.code;
+        renderLangs();
+        renderPersonas();
+        renderChips();
+        renderStatic();
+        setMode("idle");
+      });
+      langRow.appendChild(btn);
+    });
+  }
+
+  function renderPersonas(){
+    personaRow.innerHTML = "";
+    PERSONAS.forEach(function(p){
+      var btn = document.createElement("button");
+      btn.className = "persona-btn";
+      btn.type = "button";
+      btn.setAttribute("aria-pressed", p.id === state.persona ? "true":"false");
+      var e = document.createElement("div");
+      e.className = "emoji";
+      e.textContent = p.emoji;
+      var lab = document.createElement("div");
+      lab.textContent = p.label[state.lang];
+      btn.appendChild(e);
+      btn.appendChild(lab);
+      btn.addEventListener("click", function(){
+        state.persona = p.id;
+        renderPersonas();
+        renderChips();
+      });
+      personaRow.appendChild(btn);
+    });
+  }
+
+  function renderChips(){
+    chipsEl.innerHTML = "";
+    var list = CHIPS[state.lang][state.persona];
+    list.forEach(function(text){
+      var btn = document.createElement("button");
+      btn.className = "chip";
+      btn.type = "button";
+      btn.textContent = text;
+      btn.addEventListener("click", function(){ handleQuery(text); });
+      chipsEl.appendChild(btn);
+    });
+  }
+
+  function renderStatic(){
+    noticeEl.textContent = t().notice;
+    typeToggle.textContent = "⌨ " + t().type;
+    typeSend.textContent = t().send;
+    typeInput.setAttribute("placeholder", t().placeholder);
+    setMode(state.mode === "idle" ? "idle" : state.mode);
+    if (!recognition){
+      statusEl.textContent = t().noMic;
+      micBtn.disabled = true;
+      typebar.classList.add("open");
+    }
+  }
+
+  // ---- mic button ----
+  micBtn.addEventListener("click", function(){
+    if (!recognition || state.mode === "listening" || state.mode === "thinking") return;
+    var locale = LANGS.filter(function(l){ return l.code === state.lang; })[0].locale;
+    recognition.lang = locale;
+    try{
+      recognition.start();
+      setMode("listening");
+    } catch(e){ /* already started */ }
+  });
+
+  if (recognition){
+    recognition.onresult = function(evt){
+      var text = evt.results[0][0].transcript;
+      handleQuery(text);
+    };
+    recognition.onerror = function(){
+      setMode("idle");
+    };
+    recognition.onend = function(){
+      if (state.mode === "listening") setMode("idle");
+    };
+  }
+
+  // ---- type fallback ----
+  typeToggle.addEventListener("click", function(){
+    typebar.classList.toggle("open");
+    if (typebar.classList.contains("open")) typeInput.focus();
+  });
+  function sendTyped(){
+    var v = typeInput.value;
+    typeInput.value = "";
+    handleQuery(v);
+  }
+  typeSend.addEventListener("click", sendTyped);
+  typeInput.addEventListener("keydown", function(e){ if (e.key === "Enter") sendTyped(); });
+
+  if (synthSupported){
+    speechSynthesis.onvoiceschanged = function(){};
+  }
+
+  renderLangs();
+  renderPersonas();
+  renderChips();
+  renderStatic();
+
+})();
+</script>
+</body>
+</html>
