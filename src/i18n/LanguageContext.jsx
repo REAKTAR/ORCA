@@ -1,0 +1,40 @@
+import { createContext, useContext, useMemo, useState } from "react";
+import { getTranslation } from "./translations";
+
+const LanguageContext = createContext(null);
+
+export function LanguageProvider({ children }) {
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem("orca-language") || "English";
+  });
+
+  const changeLanguage = (nextLanguage) => {
+    setLanguage(nextLanguage);
+    localStorage.setItem("orca-language", nextLanguage);
+  };
+
+  const value = useMemo(
+    () => ({
+      language,
+      setLanguage: changeLanguage,
+      t: (key) => getTranslation(language, key),
+    }),
+    [language],
+  );
+
+  return (
+    <LanguageContext.Provider value={value}>
+      {children}
+    </LanguageContext.Provider>
+  );
+}
+
+export function useLanguage() {
+  const context = useContext(LanguageContext);
+
+  if (!context) {
+    throw new Error("useLanguage must be used inside LanguageProvider");
+  }
+
+  return context;
+}
