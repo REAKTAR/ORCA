@@ -14,16 +14,16 @@ export default function Language({ onNext }) {
   const [selectedLanguage, setSelectedLanguage] = useState("English");
   const selectedLabel = languages.find(([,, value]) => value === selectedLanguage)?.[1] || selectedLanguage;
   return (
-    <div className="setup-screen">
+    <div className="setup-screen setup-page-enter">
       <div className="setup-content">
         <div className="setup-brand">
-          <div className="setup-brand-mark">◒</div>
+          <img className="setup-brand-logo" src="/orca-logo-transparent.png" alt="ORCA" />
           <span>ORCA</span>
         </div>
         <div className="setup-icon">
           <Globe2 size={25} />
         </div>
-        <span className="eyebrow-label">STEP 1 OF 3</span>
+        <span className="eyebrow-label">STEP 2 OF 3</span>
         <h1>Choose your language</h1>
         <p className="setup-description">
           ORCA will respond in the language you understand best.

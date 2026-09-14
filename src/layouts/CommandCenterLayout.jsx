@@ -17,7 +17,7 @@ export default function CommandCenterLayout({ currentPage, onNavigate, children 
     <div className="command-center-shell">
       <aside className="command-sidebar" aria-label="ORCA navigation">
         <div className="command-brand">
-          <span className="command-brand-mark">◒</span>
+          <img className="brand-logo-image sidebar-logo-image" src="/orca-symbol-transparent.png" alt="ORCA" />
           <span>
             <strong>ORCA</strong>
             <small>Marine intelligence</small>

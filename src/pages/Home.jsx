@@ -33,7 +33,7 @@ export default function Home({ onNavigate, userName = "Kartikey" }) {
         <section className="clean-dashboard-heading">
           <div>
             <span className="eyebrow-label">{t("marineIntelligence")}</span>
-            <h1>{t("namaste")} {userName}</h1>
+            <h1 className="dashboard-greeting">{t("namaste")} {userName}! 👋</h1>
             <p><MapPin size={14} /> {t("locationUpdated")}</p>
           </div>
           <span className="dashboard-live-status"><Wifi size={14} /> {t("online")}</span>

@@ -8,8 +8,8 @@ export default function Splash({ onNext }) {
   }, [onNext]);
 
   return (
-    <div className="center-screen">
-      <div className="logo">🌊</div>
+    <div className="center-screen setup-page-enter">
+      <img className="splash-logo-image" src="/orca-logo-transparent.png" alt="ORCA marine intelligence logo" />
 
       <h1>ORCA</h1>
 

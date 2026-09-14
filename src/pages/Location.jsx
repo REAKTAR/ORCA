@@ -2,10 +2,10 @@ import { CheckCircle2, MapPin, Navigation } from "lucide-react";
 
 export default function Location({ onNext }) {
   return (
-    <div className="setup-screen">
+    <div className="setup-screen setup-page-enter">
       <div className="setup-content location-setup">
         <div className="setup-brand">
-          <div className="setup-brand-mark">◒</div>
+          <img className="setup-brand-logo" src="/orca-logo-transparent.png" alt="ORCA" />
           <span>ORCA</span>
         </div>
         <div className="location-illustration">

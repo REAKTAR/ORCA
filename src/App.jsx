@@ -1,5 +1,7 @@
 import { useState } from "react";
 import Splash from "./pages/Splash";
+import Login from "./pages/Login";
+import OTP from "./pages/OTP";
 import Language from "./pages/Language";
 import Persona from "./pages/Persona";
 import Location from "./pages/Location";
@@ -15,10 +17,10 @@ import CommandCenterLayout from "./layouts/CommandCenterLayout";
 import { LanguageProvider, useLanguage } from "./i18n/LanguageContext";
 
 function AppContent() {
-  const [setupStep, setSetupStep] = useState(() =>
-    localStorage.getItem("orca-setup-complete") === "true"
-      ? "complete"
-      : "splash",
+  const [setupStep, setSetupStep] = useState("splash");
+  const [phone, setPhone] = useState("");
+  const [persona, setPersona] = useState(
+    () => localStorage.getItem("orca-persona") || "Fisherman",
   );
   const [currentPage, setCurrentPage] = useState("home");
   const [userName, setUserName] = useState(
@@ -31,10 +33,42 @@ function AppContent() {
     setSetupStep("complete");
   };
 
+  const replaySetup = () => {
+    localStorage.removeItem("orca-setup-complete");
+    localStorage.removeItem("orca-user-name");
+    localStorage.removeItem("orca-persona");
+    setSetupStep("splash");
+  };
+
   if (setupStep === "splash") {
     return (
       <div className="app">
-        <Splash onNext={() => setSetupStep("language")} />
+        <Splash onNext={() => setSetupStep("login")} />
+      </div>
+    );
+  }
+
+  if (setupStep === "login") {
+    return (
+      <div className="app">
+        <Login
+          onNext={(mobileNumber) => {
+            setPhone(mobileNumber);
+            setSetupStep("otp");
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (setupStep === "otp") {
+    return (
+      <div className="app">
+        <OTP
+          phone={phone}
+          onBack={() => setSetupStep("login")}
+          onNext={() => setSetupStep("persona")}
+        />
       </div>
     );
   }
@@ -45,7 +79,7 @@ function AppContent() {
         <Language
           onNext={(selectedLanguage) => {
             setLanguage(selectedLanguage);
-            setSetupStep("persona");
+            setSetupStep("location");
           }}
         />
       </div>
@@ -57,10 +91,12 @@ function AppContent() {
       <div className="app">
         <Persona
           language={language}
-          onNext={({ name }) => {
+          onNext={({ name, persona: selectedPersona }) => {
             setUserName(name);
+            setPersona(selectedPersona);
             localStorage.setItem("orca-user-name", name);
-            setSetupStep("location");
+            localStorage.setItem("orca-persona", selectedPersona);
+            setSetupStep("language");
           }}
         />
       </div>
@@ -78,14 +114,14 @@ function AppContent() {
   const navigate = (page) => setCurrentPage(page);
 
   const pages = {
-    home: <Home onNavigate={navigate} userName={userName} />,
+    home: <Home onNavigate={navigate} userName={userName} persona={persona} />,
     chat: <Chat onNavigate={navigate} />,
     map: <MapPage onNavigate={navigate} />,
     pfz: <PFZ onNavigate={navigate} />,
     safety: <Safety onNavigate={navigate} />,
     why: <Why onNavigate={navigate} />,
     alerts: <Alerts onNavigate={navigate} />,
-    profile: <Profile onNavigate={navigate} />,
+    profile: <Profile onNavigate={navigate} onReplaySetup={replaySetup} />,
   };
 
   return (

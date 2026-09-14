@@ -8,7 +8,7 @@ export default function Header({ onNavigate }) {
   return (
     <header className="header premium-header">
       <div className="header-logo">
-        <div className="header-logo-icon">◒</div>
+        <img className="brand-logo-image" src="/orca-logo-transparent.png" alt="ORCA" />
         <div>
           <strong>ORCA</strong>
           <div className="location-row">
